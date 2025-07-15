@@ -6,7 +6,9 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "create-db-tables": "npx drizzle-kit push",
+    "seed-db": "npx tsx src/db/seed.ts"
   },
   "author": "Enric Sola",
   "dependencies": {
