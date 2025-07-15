@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb_container
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: II039WoaiZA
+      MYSQL_DATABASE: recomotordb
+      MYSQL_USER: recomotor
+      MYSQL_PASSWORD: recomotor
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - recomotor-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend_container
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=81
+      - JWT_SECRET=recomotor
+      - MARIADB_HOST=localhost
+      - MARIADB_PORT=3306
+      - MARIADB_USER=root
+      - MARIADB_PASSWORD=II039WoaiZA
+      - MARIADB_DATABASE=recomotordb
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - recomotor-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  frontend-build:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: build
+      args:
+        - VITE_API_EXPRESS=http://localhost/api
+    container_name: frontend_build_container
+    volumes:
+      - react_build:/app/dist
+    networks:
+      - recomotor-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_container
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - react_build:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend-build
+      - backend
+    networks:
+      - recomotor-network
+
+volumes:
+  mariadb_data:
+    driver: local
+  react_build:
+    driver: local
+
+networks:
+  recomotor-network:
+    driver: bridge
