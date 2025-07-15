@@ -1,7 +1,7 @@
 FROM node:22-alpine
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm i
 COPY . .
 EXPOSE 3000
-CMD ["sh", "-c", "npm run create-db-tables && npm run seed-db && npm start"]
+CMD ["sh", "-c", "npm start"]

@@ -1,26 +1,32 @@
-version: '3.8'
-
 services:
   mariadb:
-    image: mariadb:latest
-    container_name: mariadb_container
+    container_name: mariadb
+    image: mariadb:11.4.2-noble
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: II039WoaiZA
-      MYSQL_DATABASE: recomotordb
-      MYSQL_USER: recomotor
-      MYSQL_PASSWORD: recomotor
-    volumes:
-      - mariadb_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - TZ=Europe/Madrid
+      - MARIADB_ROOT_PASSWORD=II039WoaiZA
+      - MARIADB_USER=recomotor
+      - MARIADB_PASSWORD=recomotor
+      - MARIADB_DATABASE=recomotordb
     ports:
       - "3306:3306"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - mariadb_data:/var/lib/mysql
+      - /var/docker/mariadb/conf:/etc/mysql/conf.d
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin --user=root --password=II039WoaiZA --host=localhost ping"]
+      start_period: 60s
+      start_interval: 15s
+      interval: 30s
+      timeout: 5s
+      retries: 3
     networks:
       - recomotor-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
 
   backend:
     build:
@@ -31,9 +37,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - PORT=81
+      - PORT=3000
       - JWT_SECRET=recomotor
-      - MARIADB_HOST=localhost
+      - MARIADB_HOST=mariadb
       - MARIADB_PORT=3306
       - MARIADB_USER=root
       - MARIADB_PASSWORD=II039WoaiZA
@@ -43,9 +49,6 @@ services:
         condition: service_healthy
     networks:
       - recomotor-network
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
 
   frontend-build:
     build:
