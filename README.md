@@ -43,7 +43,7 @@ Para entrar en la web, una vez desplegada, accede via web a tu equipo. Nginx est
 
 El despliegue se realiza de forma totalmente automática. Docker compose al crear el contenedor de MariaDB, también crea las tablas y ejecuta el seed. Las configuraciones se importan desde `init.sql`, que se encuentra ubicado en el root del proyecto.
 
-## 📜 Logs y debugging
+## 🔍 Logs y debugging
 
 Una vez levantados los contenedores, puedes ver sus logs en cualquier momento desde la consola con el siguiente comando. Recuerda que debes estar en la misma carpeta que `docker-compose.yml`.
 
